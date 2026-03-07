@@ -1,4 +1,6 @@
 function love.load()
+	math.randomseed(os.time())
+
 	sprites = {}
 	sprites.background = love.graphics.newImage("sprites/background.png")
 	sprites.bullet = love.graphics.newImage("sprites/bullet.png")
@@ -19,22 +21,25 @@ function love.load()
 	bullets = {}
 
 	gameState = 1
+	score = 0
+	highScore = 0
+	lastScore = 0
 	maxTime = 2
 	timer = maxTime
 end
 
 function love.update(dt)
 	if gameState == 2 then
-		if love.keyboard.isDown("s") then
+		if love.keyboard.isDown("s") and player.y < (love.graphics.getHeight() - (sprites.player:getWidth() / 2)) then
 			player.y = player.y + player.speed * dt
 		end
-		if love.keyboard.isDown("w") then
+		if love.keyboard.isDown("w") and player.y > (sprites.player:getWidth() / 2) then
 			player.y = player.y - player.speed * dt
 		end
-		if love.keyboard.isDown("a") then
+		if love.keyboard.isDown("a") and player.x > (sprites.player:getWidth() / 2) then
 			player.x = player.x - player.speed * dt
 		end
-		if love.keyboard.isDown("d") then
+		if love.keyboard.isDown("d") and player.x < (love.graphics.getWidth() - (sprites.player:getWidth() / 2)) then
 			player.x = player.x + player.speed * dt
 		end
 	end
@@ -47,6 +52,8 @@ function love.update(dt)
 			for i, z in ipairs(zombies) do
 				zombies[i] = nil
 				gameState = 1
+				player.x = love.graphics.getWidth() / 2
+				player.y = love.graphics.getHeight() / 2
 			end
 		end
 	end
@@ -69,6 +76,7 @@ function love.update(dt)
 			if distanceBetween(z.x, z.y, b.x, b.y) < 20 then
 				z.dead = true
 				b.dead = true
+				score = score + 1
 			end
 		end
 	end
@@ -105,7 +113,10 @@ function love.draw()
 	if gameState == 1 then
 		love.graphics.setFont(myFont)
 		love.graphics.printf("Click anywhere to begin!", 0, 50, love.graphics.getWidth(), "center")
+		love.graphics.printf("High Score: " .. highScore, 0, 100, love.graphics.getWidth(), "center")
 	end
+
+	love.graphics.printf("Score: " .. score, 0, love.graphics.getHeight() - 100, love.graphics.getWidth(), "center")
 
 	love.graphics.draw(
 		sprites.player,
@@ -152,8 +163,17 @@ function love.keypressed(key)
 end
 
 function love.mousepressed(x, y, button)
-	if button == 1 then
+	if button == 1 and gameState == 2 then
 		spawnBullet()
+	elseif button == 1 and gameState == 1 then
+		gameState = 2
+		maxTime = 2
+		timer = maxTime
+		lastScore = score
+		if highScore < lastScore then
+			highScore = lastScore
+		end
+		score = 0
 	end
 end
 
